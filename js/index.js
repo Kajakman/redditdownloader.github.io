@@ -376,7 +376,7 @@ function downloadPost(post) {
     }
 
     /* Continue if item is from an external service and user doesn't want to download from those */
-    if (!includeNonReddit && (isImgurUrl(url) || isGfycatUrl(url))) {
+    if (!includeNonReddit && (isImgurUrl(url) || isGfycatUrl(url) || isRedgifsUrl(url))) {
         return;
     }
 
@@ -387,6 +387,11 @@ function downloadPost(post) {
 
     /* Continue if link links to Gfycat and we're not including anything that you can get from Gfycat */
     if (!includeGifs && !includeVideos && isGfycatUrl(url)) {
+        return;
+    }
+
+    /* Continue if link links to Redgifs and we're not including anything that you can get from Redgifs */
+    if (!includeGifs && !includeVideos && isRedgifsUrl(url)) {
         return;
     }
 
@@ -406,6 +411,8 @@ function downloadPost(post) {
         downloadSingleImageImgurAlbum(url, post, postIdx);
     } else if (isGfycatUrl(url)) {
         downloadGfycat(url, post, postIdx);
+    } else if (isRedgifsUrl(url)) {
+        downloadRedgifs(url, post, postIdx);
     } else if (includeOthers && isDirectUrl(url)) {
         /* Handle downloading direct files with non-image/video extensions */
         downloadDirectFile(url, post, postIdx);
@@ -418,6 +425,10 @@ function isImgurUrl(url) {
 
 function isGfycatUrl(url) {
     return url.startsWith("http://gfycat.com/") || url.startsWith("https://gfycat.com/");
+}
+
+function isRedgifsUrl(url) {
+    return url.startsWith("http://redgifs.com/") || url.startsWith("https://redgifs.com/");
 }
 
 function isRedditVideoUrl(url) {
@@ -595,6 +606,51 @@ function downloadGfycat(url, post, postIdx) {
             if (error.status !== 404) {
                 doneDownloading();
                 alert("Accessing the Gfycat API failed!\nPlease contact the developer.\nResponse code: " 
+                    + error.status + "\nResponse: " + error.responseText);
+            }
+            toDownloadCount--;
+        }
+    });
+}
+
+function downloadRedgifs(url, post, postIdx) {
+    toDownloadCount++;
+
+    const redgifsName = getPartAfterSlash(url);
+
+    $.ajax({
+        url: "https://api.redgifs.com/v1/gfycats/" + redgifsName,
+        type: "GET",
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        post: post, // pass to success function
+        postIdx: postIdx, // pass to success function
+        success: function(result, status, xhr) {
+            const gfyItem = result.gfyItem;
+            if (!gfyItem) {
+                console.log("Error: gfyItem missing in Redgifs API response for '" + url + "'");
+                toDownloadCount--;
+                return;
+            }
+            if (!includeNsfw && gfyItem.nsfw) {
+                toDownloadCount--;
+                return;
+            }
+            let url;
+            if (includeVideos) {
+                url = gfyItem.mp4Url;
+            } else if (includeGifs) {
+                url = gfyItem.gifUrl;
+            } else {
+                toDownloadCount--;
+                return;
+            }
+            downloadUrl(url, this.post, this.postIdx);
+        },
+        error: function(error) {
+            if (error.status !== 404) {
+                doneDownloading();
+                alert("Accessing the Redgifs API failed!\nPlease contact the developer.\nResponse code: " 
                     + error.status + "\nResponse: " + error.responseText);
             }
             toDownloadCount--;
