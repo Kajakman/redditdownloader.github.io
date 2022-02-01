@@ -1,4 +1,4 @@
-var CORS_PROXY_URL = "https://api.allorigins.win/raw?url=";
+let CORS_PROXY_URL = "https://api.allorigins.win/raw?url=";
 const CHECK_DOWNLOADS_FINISHED_EVERY_MS = 100;
 const MAX_POSTS_PER_REQUEST = 100;
 const MIN_POSTS_PER_REQUEST = 5;
@@ -607,6 +607,10 @@ function downloadGfycat(url, post, postIdx) {
                 doneDownloading();
                 alert("Accessing the Gfycat API failed!\nPlease contact the developer.\nResponse code: " 
                     + error.status + "\nResponse: " + error.responseText);
+            }
+            else {
+                console.log("Info: Gfycat reported 404 for '" + url + "', retrying with redgifs");
+                downloadRedgifs(url, post, postIdx);
             }
             toDownloadCount--;
         }
