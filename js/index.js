@@ -424,11 +424,11 @@ function isImgurUrl(url) {
 }
 
 function isGfycatUrl(url) {
-    return url.startsWith("http://gfycat.com/") || url.startsWith("https://gfycat.com/");
+    return url.startsWith("http://gfycat.com/") || url.startsWith("https://gfycat.com/") || url.startsWith("http://www.gfycat.com/") || url.startsWith("https://www.gfycat.com/");
 }
 
 function isRedgifsUrl(url) {
-    return url.startsWith("http://redgifs.com/") || url.startsWith("https://redgifs.com/");
+    return url.startsWith("http://redgifs.com/") || url.startsWith("https://redgifs.com/") ||  url.startsWith("http://www.redgifs.com/") || url.startsWith("https://www.redgifs.com/");
 }
 
 function isRedditVideoUrl(url) {
